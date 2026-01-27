@@ -1,0 +1,31 @@
+[Unit]
+Description=Video Embed Worker Service - Processes video embeds and updates with Hive blockchain data
+After=network.target
+
+[Service]
+Type=simple
+User=%USER%
+WorkingDirectory=%INSTALL_DIR%
+ExecStart=/usr/bin/node %INSTALL_DIR%/dist/index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=video-embed-worker
+
+# Environment
+Environment=NODE_ENV=production
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%INSTALL_DIR%
+
+# Resource limits (optional)
+# LimitNOFILE=65536
+# MemoryLimit=512M
+
+[Install]
+WantedBy=multi-user.target

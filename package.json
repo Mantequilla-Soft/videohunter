@@ -1,0 +1,30 @@
+{
+  "name": "video-embed-worker",
+  "version": "1.0.0",
+  "description": "Background worker service to process video embeds and find their usage on Hive blockchain",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "watch": "tsc --watch",
+    "test": "ts-node src/test.ts",
+    "test:hafsql": "ts-node src/test-hafsql.ts"
+  },
+  "keywords": ["hive", "video", "worker", "mongodb", "hafsql"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mongoose": "^9.1.5",
+    "pg": "^8.17.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "@types/pg": "^8.16.0",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

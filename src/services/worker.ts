@@ -1,0 +1,134 @@
+import { VideoEmbed } from '../models/VideoEmbed.js';
+import type { IVideoEmbed } from '../models/VideoEmbed.js';
+import { HAFSQLService } from './hafsql.js';
+import { logger } from '../utils/logger.js';
+import { config } from '../config/index.js';
+
+export class WorkerService {
+  private hafsqlService: HAFSQLService;
+  private isProcessing: boolean = false;
+
+  constructor() {
+    this.hafsqlService = new HAFSQLService();
+  }
+
+  /**
+   * Get unprocessed video embeds from MongoDB
+   */
+  async getUnprocessedVideos(limit: number): Promise<IVideoEmbed[]> {
+    try {
+      logger.info(`Querying for unprocessed videos with limit: ${limit}`);
+      
+      const videos = await VideoEmbed.find({
+        $or: [
+          { processed: false },
+          { processed: { $exists: false } },
+        ],
+        status: 'published', // Only process published videos
+      })
+        .limit(limit)
+        .sort({ createdAt: -1 }); // Process newest first to keep up with new content
+
+      logger.info(`Query returned ${videos.length} videos`);
+      return videos;
+    } catch (error) {
+      logger.error('Error fetching unprocessed videos:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process a single video embed
+   */
+  async processVideo(video: IVideoEmbed): Promise<void> {
+    try {
+      logger.info(`Processing video: ${video.owner}/${video.permlink}`);
+
+      // Search for the video usage on Hive
+      const match = await this.hafsqlService.findVideoUsage(video.owner, video.permlink);
+
+      if (match) {
+        // Update the video embed with the found information
+        video.embed_url = match.embedUrl;
+        video.embed_title = match.embedTitle;
+        video.processed = true;
+        video.processedAt = new Date();
+
+        await video.save();
+
+        logger.info(
+          `Successfully updated ${video.owner}/${video.permlink} with embed_url: ${match.embedUrl}`
+        );
+      } else {
+        // Mark as processed even if no match found (to avoid reprocessing indefinitely)
+        // You might want to adjust this logic based on your needs
+        logger.info(`No match found for ${video.owner}/${video.permlink}, marking as processed`);
+        video.processed = true;
+        video.processedAt = new Date();
+        await video.save();
+      }
+    } catch (error) {
+      logger.error(`Error processing video ${video.owner}/${video.permlink}:`, error);
+      // Don't mark as processed if there was an error
+      throw error;
+    }
+  }
+
+  /**
+   * Process a batch of videos
+   */
+  async processBatch(): Promise<void> {
+    if (this.isProcessing) {
+      logger.info('Already processing a batch, skipping...');
+      return;
+    }
+
+    this.isProcessing = true;
+
+    try {
+      const videos = await this.getUnprocessedVideos(config.worker.batchSize);
+
+      if (videos.length === 0) {
+        logger.info('No unprocessed videos found');
+        return;
+      }
+
+      logger.info(`Processing batch of ${videos.length} videos`);
+
+      // Process videos sequentially to avoid overwhelming HAFSQL
+      for (const video of videos) {
+        try {
+          await this.processVideo(video);
+        } catch (error) {
+          logger.error(`Failed to process video ${video.owner}/${video.permlink}:`, error);
+          // Continue with next video even if one fails
+        }
+      }
+
+      logger.info(`Batch processing completed`);
+    } catch (error) {
+      logger.error('Error in batch processing:', error);
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  /**
+   * Start the worker loop
+   */
+  start(): void {
+    logger.info(
+      `Starting worker with interval: ${config.worker.intervalMs}ms (${
+        config.worker.intervalMs / 1000 / 60
+      } minutes)`
+    );
+
+    // Process immediately on start
+    this.processBatch();
+
+    // Then process at intervals
+    setInterval(() => {
+      this.processBatch();
+    }, config.worker.intervalMs);
+  }
+}
