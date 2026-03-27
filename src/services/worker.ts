@@ -93,24 +93,23 @@ export class WorkerService {
 
       if (videos.length === 0) {
         logger.info('No unprocessed videos found');
-        return;
-      }
+      } else {
+        logger.info(`Processing batch of ${videos.length} videos`);
 
-      logger.info(`Processing batch of ${videos.length} videos`);
-
-      // Process videos sequentially to avoid overwhelming HAFSQL
-      for (const video of videos) {
-        try {
-          await this.processVideo(video);
-        } catch (error) {
-          logger.error(`Failed to process video ${video.owner}/${video.permlink}:`, error);
-          // Continue with next video even if one fails
+        // Process videos sequentially to avoid overwhelming HAFSQL
+        for (const video of videos) {
+          try {
+            await this.processVideo(video);
+          } catch (error) {
+            logger.error(`Failed to process video ${video.owner}/${video.permlink}:`, error);
+            // Continue with next video even if one fails
+          }
         }
+
+        logger.info(`Batch processing completed`);
       }
 
-      logger.info(`Batch processing completed`);
-
-      // Second pass: enrich processed videos with Hive metadata
+      // Second pass: enrich processed videos with Hive metadata (runs regardless)
       await this.enrichmentService.enrichBatch();
     } catch (error) {
       logger.error('Error in batch processing:', error);
