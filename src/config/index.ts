@@ -17,5 +17,9 @@ export const config = {
     intervalMs: parseInt(process.env.WORKER_INTERVAL_MS || '600000'), // 10 minutes
     batchSize: parseInt(process.env.BATCH_SIZE || '10'),
   },
+  hive: {
+    rpcNodes: (process.env.HIVE_RPC_NODES || 'https://api.hive.blog,https://api.deathwing.me,https://anyx.io').split(','),
+    enrichmentBatchSize: parseInt(process.env.ENRICHMENT_BATCH_SIZE || '10'),
+  },
   logLevel: process.env.LOG_LEVEL || 'info',
 };

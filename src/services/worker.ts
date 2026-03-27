@@ -1,15 +1,18 @@
 import { VideoEmbed } from '../models/VideoEmbed.js';
 import type { IVideoEmbed } from '../models/VideoEmbed.js';
 import { HAFSQLService } from './hafsql.js';
+import { EnrichmentService } from './enrichment.js';
 import { logger } from '../utils/logger.js';
 import { config } from '../config/index.js';
 
 export class WorkerService {
   private hafsqlService: HAFSQLService;
+  private enrichmentService: EnrichmentService;
   private isProcessing: boolean = false;
 
   constructor() {
     this.hafsqlService = new HAFSQLService();
+    this.enrichmentService = new EnrichmentService();
   }
 
   /**
@@ -106,6 +109,9 @@ export class WorkerService {
       }
 
       logger.info(`Batch processing completed`);
+
+      // Second pass: enrich processed videos with Hive metadata
+      await this.enrichmentService.enrichBatch();
     } catch (error) {
       logger.error('Error in batch processing:', error);
     } finally {

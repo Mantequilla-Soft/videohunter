@@ -18,6 +18,15 @@ export interface IVideoEmbed extends Document {
   embed_title?: string;
   processed?: boolean;
   processedAt?: Date;
+  hive_author?: string;
+  hive_permlink?: string;
+  hive_title?: string;
+  hive_body?: string;
+  hive_tags?: string[];
+  hive_tags_lower?: string[];
+  listed_on_3speak?: boolean;
+  enrichment_error?: string;
+  enrichedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +50,15 @@ const VideoEmbedSchema: Schema = new Schema(
     embed_title: { type: String },
     processed: { type: Boolean, default: false, index: true },
     processedAt: { type: Date },
+    hive_author: { type: String, default: null },
+    hive_permlink: { type: String, default: null },
+    hive_title: { type: String, default: null },
+    hive_body: { type: String, default: null },
+    hive_tags: { type: [String], default: null },
+    hive_tags_lower: { type: [String], default: null },
+    listed_on_3speak: { type: Boolean, default: false },
+    enrichment_error: { type: String, default: null },
+    enrichedAt: { type: Date },
   },
   {
     timestamps: true,
@@ -50,5 +68,6 @@ const VideoEmbedSchema: Schema = new Schema(
 // Compound index for efficient querying
 VideoEmbedSchema.index({ owner: 1, permlink: 1 });
 VideoEmbedSchema.index({ processed: 1, createdAt: 1 });
+VideoEmbedSchema.index({ short: 1, processed: 1, hive_author: 1, createdAt: -1 }, { name: 'enrichment_candidates' });
 
 export const VideoEmbed = mongoose.model<IVideoEmbed>('VideoEmbed', VideoEmbedSchema, 'embed-video');
