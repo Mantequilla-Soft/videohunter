@@ -63,12 +63,20 @@ export class WorkerService {
           `Successfully updated ${video.owner}/${video.permlink} with embed_url: ${match.embedUrl}`
         );
       } else {
-        // Mark as processed even if no match found (to avoid reprocessing indefinitely)
-        // You might want to adjust this logic based on your needs
-        logger.info(`No match found for ${video.owner}/${video.permlink}, marking as processed`);
-        video.processed = true;
-        video.processedAt = new Date();
-        await video.save();
+        // Only mark as permanently processed if the video is older than 4 hours
+        // This gives users time to create their Hive post with the embed
+        const ageMs = Date.now() - new Date(video.createdAt).getTime();
+        const fourHours = 4 * 60 * 60 * 1000;
+
+        if (ageMs >= fourHours) {
+          logger.info(`No match found for ${video.owner}/${video.permlink} after 4h, marking as processed`);
+          video.processed = true;
+          video.processedAt = new Date();
+          await video.save();
+        } else {
+          const remainingMin = Math.round((fourHours - ageMs) / 60000);
+          logger.info(`No match found for ${video.owner}/${video.permlink}, will retry (${remainingMin}min remaining)`);
+        }
       }
     } catch (error) {
       logger.error(`Error processing video ${video.owner}/${video.permlink}:`, error);
