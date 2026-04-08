@@ -3,7 +3,7 @@ export interface HiveComment {
   permlink: string;
   parent_author: string;
   parent_permlink: string;
-  body: string;
+  body: string | null;
   title?: string;
   json_metadata?: string;
 }

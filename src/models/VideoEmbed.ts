@@ -27,6 +27,7 @@ export interface IVideoEmbed extends Document {
   listed_on_3speak?: boolean;
   enrichment_error?: string;
   enrichedAt?: Date;
+  hive_lookup_done?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +60,7 @@ const VideoEmbedSchema: Schema = new Schema(
     listed_on_3speak: { type: Boolean, default: false },
     enrichment_error: { type: String, default: null },
     enrichedAt: { type: Date },
+    hive_lookup_done: { type: Boolean, default: false, index: true },
   },
   {
     timestamps: true,

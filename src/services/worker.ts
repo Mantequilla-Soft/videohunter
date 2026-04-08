@@ -23,11 +23,14 @@ export class WorkerService {
       logger.info(`Querying for unprocessed videos with limit: ${limit}`);
       
       const videos = await VideoEmbed.find({
+        status: 'published',
+        hive_lookup_done: { $ne: true }, // Not yet permanently given up
         $or: [
-          { processed: false },
-          { processed: { $exists: false } },
+          { embed_url: { $exists: false } },
+          { embed_url: null },
+          { embed_url: '' },
         ],
-        status: 'published', // Only process published videos
+        hive_author: null, // Not yet enriched via direct API either
       })
         .limit(limit)
         .sort({ createdAt: -1 }); // Process newest first to keep up with new content
@@ -69,9 +72,8 @@ export class WorkerService {
         const fourHours = 4 * 60 * 60 * 1000;
 
         if (ageMs >= fourHours) {
-          logger.info(`No match found for ${video.owner}/${video.permlink} after 4h, marking as processed`);
-          video.processed = true;
-          video.processedAt = new Date();
+          logger.info(`No match found for ${video.owner}/${video.permlink} after 4h, giving up`);
+          video.hive_lookup_done = true;
           await video.save();
         } else {
           const remainingMin = Math.round((fourHours - ageMs) / 60000);

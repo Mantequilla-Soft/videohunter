@@ -90,9 +90,11 @@ export class HAFSQLService {
   ): Promise<VideoMatch | null> {
     try {
       const embedPattern = `play.3speak.tv/embed?v=${videoOwner}/${videoPermlink}`;
-      
-      // Check if this comment contains the specific video
-      if (!comment.body.includes(embedPattern)) {
+
+      // Check if this comment contains the specific video (body or json_metadata)
+      const bodyMatch = comment.body && comment.body.includes(embedPattern);
+      const metaMatch = comment.json_metadata && comment.json_metadata.includes(embedPattern);
+      if (!bodyMatch && !metaMatch) {
         return null;
       }
 
