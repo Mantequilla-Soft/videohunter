@@ -59,6 +59,7 @@ export class WorkerService {
         video.embed_title = match.embedTitle;
         video.processed = true;
         video.processedAt = new Date();
+        video.listed_on_3speak = true;
 
         await video.save();
 
