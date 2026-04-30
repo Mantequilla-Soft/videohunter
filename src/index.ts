@@ -1,5 +1,6 @@
 import { DatabaseService } from './services/database.js';
 import { WorkerService } from './services/worker.js';
+import { HealerService } from './services/healer.js';
 import { logger } from './utils/logger.js';
 
 async function main() {
@@ -14,7 +15,11 @@ async function main() {
     const worker = new WorkerService();
     worker.start();
 
-    logger.info('Worker service started successfully');
+    // Initialize and start healer (repairs enriched-but-unflagged entries)
+    const healer = new HealerService();
+    healer.start();
+
+    logger.info('Worker and healer services started successfully');
 
     // Handle graceful shutdown
     process.on('SIGINT', async () => {

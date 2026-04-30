@@ -9,10 +9,19 @@
     "start": "node dist/index.js",
     "dev": "node --loader ts-node/esm src/index.ts",
     "watch": "tsc --watch",
-    "test": "ts-node src/test.ts",
-    "test:hafsql": "ts-node src/test-hafsql.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "debug:mongo": "ts-node src/test.ts",
+    "debug:hafsql": "ts-node src/test-hafsql.ts"
   },
-  "keywords": ["hive", "video", "worker", "mongodb", "hafsql"],
+  "keywords": [
+    "hive",
+    "video",
+    "worker",
+    "mongodb",
+    "hafsql"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -23,8 +32,11 @@
   "devDependencies": {
     "@types/node": "^25.0.10",
     "@types/pg": "^8.16.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "mongodb-memory-server": "^11.1.0",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
   }
 }

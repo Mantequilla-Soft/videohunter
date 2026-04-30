@@ -21,5 +21,8 @@ export const config = {
     rpcNodes: (process.env.HIVE_RPC_NODES || 'https://api.hive.blog,https://api.deathwing.me,https://anyx.io').split(','),
     enrichmentBatchSize: parseInt(process.env.ENRICHMENT_BATCH_SIZE || '10'),
   },
+  healer: {
+    intervalMs: parseInt(process.env.HEALER_INTERVAL_MS || '3600000'), // 1 hour
+  },
   logLevel: process.env.LOG_LEVEL || 'info',
 };
